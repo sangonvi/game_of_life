@@ -1,19 +1,13 @@
-#include <ncurses.h>
-#include <curses.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <unistd.h>
+#include<time.h>
 
-#define HEIGHT 25
-#define LENGTH 80
 #define LIFE "*"
 #define DEAD " "
-#define MAXSPEED 1.9
-#define MINSPEED 0.1
-#define ITERSPEED 0.1
-#define STARTSPEED 100000
 
 void gameMenu();
 void printMenuOptions();
@@ -27,14 +21,18 @@ void fieldCreation(char **matrix);
 int fieldUpdate(char ***matrix, char ***buff);
 int countAliveCells(char **matrix, int i, int j);
 char cellUpdate(char cell, int count, int *changeFlag);
-void fieldOutput(char **matrix, WINDOW *win);
-void changeSpeed(char button, float *speed);
+void printTotalGrid(char **totalGrid, int timeStep);
 void createRandomInput();
 
-int main() {
-  signal(SIGINT, SIG_IGN);
-  signal(SIGTSTP, SIG_IGN);
-  signal(SIGQUIT, SIG_IGN);
+int HEIGHT;
+int LENGTH;
+int TIMESTEPS;
+
+int main(int argc, char** argv) {
+   HEIGHT = atoi(argv[1]);
+	 LENGTH = atoi(argv[2]);
+	 TIMESTEPS = atoi(argv[3]);
+
   gameMenu();
   return 0;
 }
@@ -77,37 +75,26 @@ void saveScan(int *command) {
 }
 
 void game(int mode) {
-  char **matrix;
+  char **matrix; 
   char **buff;
-  float speed = 1.0f; 
-  char button = '\0';
-
+  
+  int timesteps=10;
   allocMemory(&matrix);
   allocMemory(&buff);
   changeStream(mode);
   fieldCreation(matrix);
 
   stdin = freopen("/dev/tty", "r", stdin);
-  initscr();
-  noecho();
-  WINDOW *win = newwin(HEIGHT, LENGTH, 0, 0);
-  wrefresh(win);
-  fieldOutput(matrix, win);
-  wrefresh(win);
 
-  while (fieldUpdate(&matrix, &buff) && !(button == 'q' || button == 'Q')) {
-    fieldOutput(matrix, win);
-    mvwprintw(win, HEIGHT - 1, 5, "Speed: x%.1f", 2.0 - speed);
-    halfdelay(1);
-    button = wgetch(win);
-    changeSpeed(button, &speed);
-    usleep(STARTSPEED * speed);
-    wrefresh(win);
+  for (int time=1; time<=timesteps; time ++){
+     fieldUpdate(&matrix, &buff);
+     printTotalGrid(matrix,time);
   }
+ 
   freeMemory(matrix);
   freeMemory(buff);
-  endwin();
 }
+
 
 void changeStream(int mode) {
   switch (mode) {
@@ -226,28 +213,6 @@ char cellUpdate(char cell, int count, int *changeFlag) {
   return newCell;
 }
 
-void fieldOutput(char **matrix, WINDOW *win) {
-  for (int i = 0; i < HEIGHT; i++) {
-    for (int j = 0; j < LENGTH; j++) {
-      if (matrix[i][j] == '1') {
-        mvwprintw(win, i, j, LIFE);
-        printw(LIFE);
-      } else {
-
-        mvwprintw(win, i, j, DEAD);
-      }
-    }
-  }
-}
-
-void changeSpeed(char button, float *speed) {
-  if (*speed > MINSPEED && (button == 'a' || button == 'A')) {
-    *speed -= ITERSPEED;
-  }
-  if (*speed < MAXSPEED && (button == 'z' || button == 'Z')) {
-    *speed += ITERSPEED;
-  }
-}
 
 void createRandomInput(){
   FILE *arq;
@@ -263,4 +228,23 @@ void createRandomInput(){
   }  
 
   fclose(arq);
+}
+
+
+void printTotalGrid(char **totalGrid,int timeStep){
+	system("clear");
+	printf("Time step %d\n", timeStep);
+	for (int i=0;i<HEIGHT; i++){		
+		for (int j=0; j<LENGTH; j++){
+			if (totalGrid[i][j] == '1'){
+				printf("%c ",'*');
+			}else{
+				printf("%c ",' ');
+			}
+			
+		}
+		printf("\n");
+	}
+	usleep(500 *1000);
+
 }

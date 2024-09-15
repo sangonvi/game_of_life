@@ -23,9 +23,9 @@ void printTotalGrid(int **totalGrid, int rows, int columns, int timeStep);
 int main(int argc, char** argv) {
    	int nprocesses;
   	int my_rank;
-  	int nrows=40;
-  	int ncolumns=40;
-	int timesteps=10;
+  	int nrows;
+  	int ncolumns;
+	int timesteps;
     int next_rank;
 	int previous_rank;
     int tag=200;
@@ -35,8 +35,11 @@ int main(int argc, char** argv) {
 	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &nprocesses);
 
-	int rows_per_process = nrows/nprocesses;
+    nrows = atoi(argv[1]);
+	ncolumns = atoi(argv[2]);
+	timesteps = atoi(argv[3]);
 
+	int rows_per_process = nrows/nprocesses;
 	int **current_grid;
 	int **next_grid;
 	int **total_grid;
@@ -219,12 +222,12 @@ void printTotalGrid(int **totalGrid, int rows, int columns, int timeStep){
 	printf("Time step %d\n", timeStep);
 	for (int i=0;i<rows; i++){		
 		for (int j=0; j<columns; j++){
-			printf("%d ",totalGrid[i][j]);
-			// if (totalGrid[i][j] == 1){
-			// 	printf("%c ",'*');
-			// }else{
-			// 	printf("%c ",' ');
-			// }
+			// printf("%d ",totalGrid[i][j]);
+			if (totalGrid[i][j] == 1){
+				printf("%c ",'*');
+			}else{
+				printf("%c ",' ');
+			}
 			
 		}
 		printf("\n");
