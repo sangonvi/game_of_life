@@ -113,22 +113,22 @@ void changeStream(int mode) {
   switch (mode) {
   case 1:
     createRandomInput();
-    stdin = freopen("../presets/randomInput.txt", "r", stdin);
+    stdin = freopen("../../presets/randomInput.txt", "r", stdin);
     break;
   case 2:
-    stdin = freopen("../presets/cow.txt", "r", stdin);
+    stdin = freopen("../../presets/cow.txt", "r", stdin);
     break;
   case 3:
-    stdin = freopen("../presets/gunGospy.txt", "r", stdin);
+    stdin = freopen("../../presets/gunGospy.txt", "r", stdin);
     break;
   case 4:
-    stdin = freopen("../presets/gunSim.txt", "r", stdin);
+    stdin = freopen("../../presets/gunSim.txt", "r", stdin);
     break;
   case 5:
-    stdin = freopen("../presets/agar.txt", "r", stdin);
+    stdin = freopen("../../presets/agar.txt", "r", stdin);
     break;
   case 6:
-    stdin = freopen("../presets/shipNew.txt", "r", stdin);
+    stdin = freopen("../../presets/shipNew.txt", "r", stdin);
     break;
   }
 }
@@ -251,7 +251,7 @@ void changeSpeed(char button, float *speed) {
 
 void createRandomInput(){
   FILE *arq;
-  arq = fopen("../presets/randomInput.txt", "w");
+  arq = fopen("../../presets/randomInput.txt", "w");
   for (int i = 0; i < HEIGHT; i++) {
     for (int j = 0; j < LENGTH; j++) { 
        if (( (double)rand() / (double)RAND_MAX ) > 0.5) {
