@@ -15,8 +15,8 @@ void getPreviousAndNextRanks(int my_rank, int *previous_rank, int *next_rank, in
 void fieldCreation(int **matrix, int rank, int nrows, int ncolums);
 int isCorner(int i, int j, int nrows, int ncolumns);
 int getCorrespondingCorner(int **current_grid, int i, int j, int nrows, int ncolumns);
-int getCorrespondingValue(int **current_grid, int i, int j, int nrows, int ncolumns, int *top_ghost, int *bottom_ghost);
-int countNeighboursCells(int **current_grid, int i, int j, int nrows, int ncolumns, int *top_ghost, int *bottom_ghost);
+int getCorrespondingValue(int **current_grid, int i, int j, int nrows, int ncolumns, int *top_ghost, int *bottom_ghost, int rank);
+int countNeighboursCells(int **current_grid, int i, int j, int nrows, int ncolumns, int *top_ghost, int *bottom_ghost, int rank);
 void fillTotalGrid(int **completedGrid, int rank, int **gridOfRank, int rows, int columns);
 int cellUpdate(int cell, int count);
 void printTotalGrid(int **totalGrid, int rows, int columns, int timeStep);
@@ -68,11 +68,9 @@ int main(int argc, char** argv) {
         MPI_Recv(bottom_ghost, ncolumns, MPI_INT, next_rank, tag,MPI_COMM_WORLD, &status);
 		MPI_Recv(top_ghost, ncolumns, MPI_INT, previous_rank, tag,MPI_COMM_WORLD, &status);
 	
-
         for (int i = 0; i < rows_per_process; i++) {
 			for (int j = 0; j < ncolumns; j++) {
-				int count = countNeighboursCells(current_grid, i, j, 
-													rows_per_process, ncolumns, top_ghost, bottom_ghost);
+				int count = countNeighboursCells(current_grid, i, j, rows_per_process, ncolumns, top_ghost, bottom_ghost, my_rank);	
 				next_grid[i][j] = cellUpdate(current_grid[i][j], count);
 			}
 		}
@@ -80,11 +78,15 @@ int main(int argc, char** argv) {
         *current_grid = *next_grid;
 
 		if (my_rank == 0){
+			int ** temp;
+			allocMemory(&temp,rows_per_process, ncolumns);
+
 			fillTotalGrid(total_grid ,my_rank, next_grid, rows_per_process, ncolumns);
 			for (int rank=1; rank<nprocesses; rank++){
-				MPI_Recv(&next_grid[0][0], rows_per_process*ncolumns, MPI_INT, rank, tag,MPI_COMM_WORLD, &status);
-				fillTotalGrid(total_grid ,rank, next_grid, rows_per_process, ncolumns);
+				MPI_Recv(&temp[0][0], rows_per_process*ncolumns, MPI_INT, rank, tag,MPI_COMM_WORLD, &status);
+				fillTotalGrid(total_grid ,rank, temp, rows_per_process, ncolumns);
 			}
+			freeMemory(temp, rows_per_process);
 			printTotalGrid(total_grid,nrows,ncolumns,time);
 		}else{
 			MPI_Send(&next_grid[0][0], rows_per_process*ncolumns, MPI_INT, 0, tag, MPI_COMM_WORLD);	
@@ -93,8 +95,8 @@ int main(int argc, char** argv) {
     } 
 
     //freeMemory(next_grid, rows_per_process);
-	//freeMemory(current_grid, rows_per_process);
-	//freeMemory(total_grid, nrows);
+	// freeMemory(current_grid, rows_per_process);
+	// freeMemory(total_grid, nrows);
 	
 
 	MPI_Finalize();
@@ -191,7 +193,7 @@ int getCorrespondingCorner(int **current_grid, int i, int j, int nrows, int ncol
 	 }
 }
 
-int getCorrespondingValue(int **current_grid, int i, int j, int nrows, int ncolumns, int *top_ghost, int *bottom_ghost){
+int getCorrespondingValue(int **current_grid, int i, int j, int nrows, int ncolumns, int *top_ghost, int *bottom_ghost, int rank){
 	if(i == -1)
 		return top_ghost[j];
 	if (i == nrows)
@@ -204,7 +206,7 @@ int getCorrespondingValue(int **current_grid, int i, int j, int nrows, int ncolu
 	return current_grid[i][j];
 }
 
-int countNeighboursCells(int **current_grid, int i, int j, int nrows, int ncolumns, int *top_ghost, int *bottom_ghost) {
+int countNeighboursCells(int **current_grid, int i, int j, int nrows, int ncolumns, int *top_ghost, int *bottom_ghost, int rank) {
   int count = 0;
   for (int index_i= i-1; index_i <= i+1; index_i++) {
     for (int index_j = j-1; index_j <= j+1; index_j++) {	
@@ -212,7 +214,7 @@ int countNeighboursCells(int **current_grid, int i, int j, int nrows, int ncolum
 			if (isCorner(index_i,index_j,nrows,ncolumns)){
 				count += getCorrespondingCorner(current_grid,index_i,index_j,nrows,ncolumns);
 			}else{
-				count += getCorrespondingValue(current_grid,index_i,index_j,nrows,ncolumns,top_ghost,bottom_ghost);
+				count += getCorrespondingValue(current_grid, index_i, index_j, nrows, ncolumns, top_ghost,bottom_ghost, rank);
 			}
 		}
     }
@@ -259,6 +261,7 @@ void printTotalGrid(int **totalGrid, int rows, int columns, int timeStep){
 		}
 		printf("\n");
 	}
+	printf("\n");
 	usleep(500 *1000);
 
 }
