@@ -29,7 +29,7 @@ int LENGTH;
 int TIMESTEPS;
 int ACTIVE_INTERFACE;
 char MODE_PARALELL[] = "SERIAL";
-
+clock_t t;
 int main(int argc, char** argv) {
    HEIGHT = atoi(argv[1]);
 	 LENGTH = atoi(argv[2]);
@@ -90,13 +90,17 @@ void game(int mode) {
 
   stdin = freopen("/dev/tty", "r", stdin);
 
+  t = clock();
   for (int time=1; time<=timesteps; time ++){
      fieldUpdate(&matrix, &buff);
      if(ACTIVE_INTERFACE){
       printTotalGrid(matrix,time);
      }
   }
- 
+  t = clock() - t;
+  double time_taken = ((double)t)/CLOCKS_PER_SEC;
+  printf("Total Elapsed Time(s): %.4f",time_taken);
+  reportResults(time_taken);
   freeMemory(matrix);
   freeMemory(buff);
 }
@@ -257,8 +261,8 @@ void printTotalGrid(char **totalGrid,int timeStep){
 
 void reportResults(double time){
   FILE *fpt;
-  fpt = fopen("../report.csv", "w+");
-  fprintf(fpt,"%s,%.2f; %d; %d; %d; %d\n", MODE_PARALELL, time, HEIGHT, LENGTH, TIMESTEPS, 0);
+  fpt = fopen("../report.csv", "a+");
+  fprintf(fpt,"%s,%.4f; %d; %d; %d; %d\n", MODE_PARALELL, time, HEIGHT, LENGTH, TIMESTEPS, 0);
   fclose(fpt);
   
   
