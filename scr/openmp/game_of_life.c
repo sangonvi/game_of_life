@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 #include<time.h>
+#include <omp.h>
 
 #define LIFE "*"
 #define DEAD " "
@@ -24,19 +25,20 @@ char cellUpdate(char cell, int count, int *changeFlag);
 void printTotalGrid(char **totalGrid, int timeStep);
 void createRandomInput();
 void reportResults(double time);
+
 int HEIGHT;
 int LENGTH;
 int TIMESTEPS;
 int ACTIVE_INTERFACE;
-char MODE_PARALELL[] = "SERIAL";
-
+int NUMBER_THREADS;
+char MODE_PARALELL[] = "OPEN MP";
 int main(int argc, char** argv) {
    HEIGHT = atoi(argv[1]);
 	 LENGTH = atoi(argv[2]);
 	 TIMESTEPS = atoi(argv[3]);
 	 ACTIVE_INTERFACE = atoi(argv[4]);
+	 NUMBER_THREADS = atoi(argv[5]);
 	 
-
   gameMenu();
   return 0;
 }
@@ -89,14 +91,18 @@ void game(int mode) {
   fieldCreation(matrix);
 
   stdin = freopen("/dev/tty", "r", stdin);
-
+  double tstart = omp_get_wtime();
   for (int time=1; time<=timesteps; time ++){
      fieldUpdate(&matrix, &buff);
      if(ACTIVE_INTERFACE){
-      printTotalGrid(matrix,time);
+        printTotalGrid(matrix,time);
      }
   }
- 
+  double tend = omp_get_wtime();
+  double time = tend - tstart;
+  reportResults(time);
+  printf("Tempo total de execução %.2f segundos", time);
+             
   freeMemory(matrix);
   freeMemory(buff);
 }
@@ -171,6 +177,8 @@ int fieldUpdate(char ***matrix, char ***buff) {
   int changeFlag = 0;
   int count;
   int check = 1;
+  
+  #pragma omp parallel for collapse(2) num_threads(NUMBER_THREADS)
   for (int i = 0; i < HEIGHT; i++) {
     for (int j = 0; j < LENGTH; j++) {
       count = countAliveCells(*matrix, i, j);
@@ -255,11 +263,13 @@ void printTotalGrid(char **totalGrid,int timeStep){
 
 }
 
+
 void reportResults(double time){
   FILE *fpt;
   fpt = fopen("../report.csv", "w+");
-  fprintf(fpt,"%s,%.2f; %d; %d; %d; %d\n", MODE_PARALELL, time, HEIGHT, LENGTH, TIMESTEPS, 0);
+  fprintf(fpt,"%s; %.2f; %d; %d; %d; %d\n", MODE_PARALELL, time, HEIGHT, LENGTH, TIMESTEPS, NUMBER_THREADS);
   fclose(fpt);
   
   
 }
+
