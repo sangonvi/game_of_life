@@ -98,7 +98,8 @@ int main(int argc, char** argv) {
 			}else{
 				MPI_Send(&next_grid[0][0], rows_per_process*ncolumns, MPI_INT, 0, tag, MPI_COMM_WORLD);	
 			}
-        	
+		}
+
 	} 
 
 	endTime = MPI_Wtime();
@@ -118,15 +119,11 @@ int main(int argc, char** argv) {
 		MPI_Send(&elapsedTime,1, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);	
 	}
 	
-    //freeMemory(next_grid, rows_per_process);
-	// freeMemory(current_grid, rows_per_process);
-	// freeMemory(total_grid, nrows);
-	
 
 	MPI_Finalize();
 
 	return 0;
-	}
+}
 
 
 int allocMemory(int ***matrix, int nrows, int ncolumns) {
