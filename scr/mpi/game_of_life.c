@@ -21,6 +21,10 @@ void fillTotalGrid(int **completedGrid, int rank, int **gridOfRank, int rows, in
 int cellUpdate(int cell, int count);
 void printTotalGrid(int **totalGrid, int rows, int columns, int timeStep);
 void freeMemory(int **matrix, int nrows);
+void reportResults(double time, int rows, int columns, int timesteps, int nprocesses);
+
+int ACTIVE_INTERFACE;
+char MODE_PARALELL[] = "MPI";
 
 int main(int argc, char** argv) {
    	int nprocesses;
@@ -40,6 +44,7 @@ int main(int argc, char** argv) {
     nrows = atoi(argv[1]);
 	ncolumns = atoi(argv[2]);
 	timesteps = atoi(argv[3]);
+	ACTIVE_INTERFACE = atoi(argv[4]);
 
 	int rows_per_process = nrows/nprocesses;
 	int **current_grid;
@@ -47,7 +52,7 @@ int main(int argc, char** argv) {
 	int **total_grid;
 	int *top_ghost;
 	int *bottom_ghost;
-
+    double startTime, endTime;
     
 	allocMemory(&current_grid, rows_per_process, ncolumns);
 	allocMemory(&next_grid, rows_per_process, ncolumns);
@@ -61,6 +66,7 @@ int main(int argc, char** argv) {
 	getPreviousAndNextRanks(my_rank, &previous_rank, &next_rank, nprocesses);
 	fieldCreation(current_grid, my_rank, rows_per_process, ncolumns); 
 	
+	startTime = MPI_Wtime();
 	for (int time=1; time <= timesteps; time++){
 		MPI_Send(current_grid[0], ncolumns, MPI_INT, previous_rank, tag, MPI_COMM_WORLD);
 		MPI_Send(current_grid[rows_per_process-1], ncolumns, MPI_INT, next_rank, tag, MPI_COMM_WORLD);
@@ -77,23 +83,41 @@ int main(int argc, char** argv) {
 
         *current_grid = *next_grid;
 
-		if (my_rank == 0){
-			int ** temp;
-			allocMemory(&temp,rows_per_process, ncolumns);
+        if (ACTIVE_INTERFACE){
+			if (my_rank == 0){
+				int ** temp;
+				allocMemory(&temp,rows_per_process, ncolumns);
 
-			fillTotalGrid(total_grid ,my_rank, next_grid, rows_per_process, ncolumns);
-			for (int rank=1; rank<nprocesses; rank++){
-				MPI_Recv(&temp[0][0], rows_per_process*ncolumns, MPI_INT, rank, tag,MPI_COMM_WORLD, &status);
-				fillTotalGrid(total_grid ,rank, temp, rows_per_process, ncolumns);
+				fillTotalGrid(total_grid ,my_rank, next_grid, rows_per_process, ncolumns);
+				for (int rank=1; rank<nprocesses; rank++){
+					MPI_Recv(&temp[0][0], rows_per_process*ncolumns, MPI_INT, rank, tag,MPI_COMM_WORLD, &status);
+						fillTotalGrid(total_grid ,rank, temp, rows_per_process, ncolumns);
+				}
+				freeMemory(temp, rows_per_process);
+				printTotalGrid(total_grid,nrows,ncolumns,time);
+			}else{
+				MPI_Send(&next_grid[0][0], rows_per_process*ncolumns, MPI_INT, 0, tag, MPI_COMM_WORLD);	
 			}
-			freeMemory(temp, rows_per_process);
-			printTotalGrid(total_grid,nrows,ncolumns,time);
-		}else{
-			MPI_Send(&next_grid[0][0], rows_per_process*ncolumns, MPI_INT, 0, tag, MPI_COMM_WORLD);	
-		}
         	
-    } 
+	} 
 
+	endTime = MPI_Wtime();
+    double elapsedTime = endTime - startTime;
+	printf("Rank %d - Elapsed Time : %f \n", my_rank, elapsedTime);
+
+	if (my_rank == 0){
+			double elapsedTimeCurrentRank;
+			for (int rank=1; rank<nprocesses; rank++){
+				MPI_Recv(&elapsedTimeCurrentRank, 1, MPI_DOUBLE, rank, tag,MPI_COMM_WORLD, &status);
+				elapsedTime += elapsedTimeCurrentRank;
+			}
+			printf("Averaged Total Elapsed Time: %f", elapsedTime/nprocesses);
+			reportResults(elapsedTime, nrows, ncolumns, timesteps, nprocesses);
+			
+	}else{
+		MPI_Send(&elapsedTime,1, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);	
+	}
+	
     //freeMemory(next_grid, rows_per_process);
 	// freeMemory(current_grid, rows_per_process);
 	// freeMemory(total_grid, nrows);
@@ -265,3 +289,13 @@ void printTotalGrid(int **totalGrid, int rows, int columns, int timeStep){
 	usleep(500 *1000);
 
 }
+
+void reportResults(double time, int rows, int columns, int timesteps, int nprocesses){
+  FILE *fpt;
+  fpt = fopen("../report.csv", "a+");
+  fprintf(fpt,"%s,%.4f; %d; %d; %d; %d\n", MODE_PARALELL, time, rows, columns, timesteps, nprocesses);
+  fclose(fpt);
+  
+  
+}
+

@@ -266,8 +266,8 @@ void printTotalGrid(char **totalGrid,int timeStep){
 
 void reportResults(double time){
   FILE *fpt;
-  fpt = fopen("../report.csv", "w+");
-  fprintf(fpt,"%s; %.2f; %d; %d; %d; %d\n", MODE_PARALELL, time, HEIGHT, LENGTH, TIMESTEPS, NUMBER_THREADS);
+  fpt = fopen("../report.csv", "a+");
+  fprintf(fpt,"%s; %.4f; %d; %d; %d; %d\n", MODE_PARALELL, time, HEIGHT, LENGTH, TIMESTEPS, NUMBER_THREADS);
   fclose(fpt);
   
   
