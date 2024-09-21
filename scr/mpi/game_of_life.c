@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
 				elapsedTime += elapsedTimeCurrentRank;
 			}
 			printf("Averaged Total Elapsed Time: %f", elapsedTime/nprocesses);
-			reportResults(elapsedTime, nrows, ncolumns, timesteps, nprocesses);
+			reportResults(elapsedTime/nprocesses, nrows, ncolumns, timesteps, nprocesses);
 			
 	}else{
 		MPI_Send(&elapsedTime,1, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD);	
