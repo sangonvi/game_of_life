@@ -65,8 +65,8 @@ int main(int argc, char** argv) {
 
 	getPreviousAndNextRanks(my_rank, &previous_rank, &next_rank, nprocesses);
 	fieldCreation(current_grid, my_rank, rows_per_process, ncolumns); 
-	 
-	double elapsedTime;
+	
+
 	startTime = MPI_Wtime();
 	for (int time=1; time <= timesteps; time++){
 		MPI_Send(current_grid[0], ncolumns, MPI_INT, previous_rank, tag, MPI_COMM_WORLD);
@@ -82,8 +82,7 @@ int main(int argc, char** argv) {
 			}
 		}
 
-        endTime = MPI_Wtime();
-        double elapsedTime = endTime - startTime;
+       
         *current_grid = *next_grid;
 
         if (ACTIVE_INTERFACE){
@@ -104,6 +103,9 @@ int main(int argc, char** argv) {
 		}
 
 	} 
+
+	endTime = MPI_Wtime();
+    double elapsedTime = endTime - startTime;
 
 	printf("Rank %d - Elapsed Time : %f \n", my_rank, elapsedTime);
 
