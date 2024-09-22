@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <mpi.h>
-#include <time.h>
 
 void createRandomInput(int rows, int columns);
 
