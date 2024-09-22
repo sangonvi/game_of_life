@@ -94,7 +94,7 @@ void game(int mode) {
   double tstart = omp_get_wtime();
   for (int time=1; time<=timesteps; time ++){
      fieldUpdate(&matrix, &buff);
-     if(ACTIVE_INTERFACE){
+     if(ACTIVE_INTERFACE == 0){
         printTotalGrid(matrix,time);
      }
   }
