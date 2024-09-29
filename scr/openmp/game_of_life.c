@@ -91,17 +91,17 @@ void game(int mode) {
   fieldCreation(matrix);
 
   stdin = freopen("/dev/tty", "r", stdin);
-  double tstart = omp_get_wtime();
-  for (int time=1; time<=timesteps; time ++){
-     fieldUpdate(&matrix, &buff);
-     if(ACTIVE_INTERFACE == 0){
+  double tstart = omp_get_wtime();  
+  for (int time=1; time<=timesteps; time ++){    
+    fieldUpdate(&matrix, &buff);
+    if(ACTIVE_INTERFACE == 0){
         printTotalGrid(matrix,time);
-     }
-  }
+    }
+  }  
   double tend = omp_get_wtime();
   double time = tend - tstart;
   reportResults(time);
-  printf("Tempo total de execução %.2f segundos", time);
+  printf("Tempo total de execução %.2f segundos", time);  
              
   freeMemory(matrix);
   freeMemory(buff);
@@ -178,10 +178,10 @@ int fieldUpdate(char ***matrix, char ***buff) {
   int count;
   int check = 1;
   
-  #pragma omp parallel for collapse(2) num_threads(NUMBER_THREADS)
+  #pragma omp parallel for collapse(2) private(count) num_threads(NUMBER_THREADS)
   for (int i = 0; i < HEIGHT; i++) {
     for (int j = 0; j < LENGTH; j++) {
-      count = countAliveCells(*matrix, i, j);
+      count =       (*matrix, i, j);
       livCells += count;
       (*buff)[i][j] = cellUpdate((*matrix)[i][j], count, &changeFlag);
     }
@@ -189,6 +189,7 @@ int fieldUpdate(char ***matrix, char ***buff) {
   char **temp = *matrix;
   *matrix = *buff;
   *buff = temp;
+
   if (livCells == 0 || changeFlag == 0)
     check = 0;
   return check;
