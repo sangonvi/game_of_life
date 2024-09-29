@@ -81,8 +81,7 @@ void saveScan(int *command) {
 void game(int mode) {
   char **matrix; 
   char **buff;
-  
-  int timesteps=10;
+ 
   allocMemory(&matrix);
   allocMemory(&buff);
   changeStream(mode);
@@ -91,7 +90,7 @@ void game(int mode) {
   stdin = freopen("/dev/tty", "r", stdin);
 
   t = clock();
-  for (int time=1; time<=timesteps; time ++){
+  for (int time=1; time<=TIMESTEPS; time ++){
      fieldUpdate(&matrix, &buff);
      if(ACTIVE_INTERFACE){
       printTotalGrid(matrix,time);
