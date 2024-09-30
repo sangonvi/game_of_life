@@ -84,7 +84,6 @@ void game(int mode) {
   char **matrix; 
   char **buff;
   
-  int timesteps=10;
   allocMemory(&matrix);
   allocMemory(&buff);
   changeStream(mode);
@@ -92,16 +91,16 @@ void game(int mode) {
 
   stdin = freopen("/dev/tty", "r", stdin);
   double tstart = omp_get_wtime();  
-  for (int time=1; time<=timesteps; time ++){    
+  for (int time=1; time<=TIMESTEPS; time ++){    
     fieldUpdate(&matrix, &buff);
-    if(ACTIVE_INTERFACE == 0){
+    if(ACTIVE_INTERFACE){
         printTotalGrid(matrix,time);
     }
   }  
   double tend = omp_get_wtime();
   double time = tend - tstart;
   reportResults(time);
-  printf("Tempo total de execução %.2f segundos", time);  
+  printf("Tempo total de execução %.4f segundos", time);  
              
   freeMemory(matrix);
   freeMemory(buff);
