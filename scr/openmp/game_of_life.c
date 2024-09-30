@@ -177,7 +177,7 @@ int fieldUpdate(char ***matrix, char ***buff) {
   int count;
   int check = 1;
   
-  #pragma omp parallel for collapse(2) private(count) num_threads(NUMBER_THREADS)
+  #pragma omp parallel for private(count) num_threads(NUMBER_THREADS)
   for (int i = 0; i < HEIGHT; i++) {
     for (int j = 0; j < LENGTH; j++) {
       count =       (*matrix, i, j);
